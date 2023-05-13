@@ -1,22 +1,33 @@
 package com.example.app2048
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.GestureDetector
+import android.view.Gravity
 import android.view.MotionEvent
+import android.view.View
 import android.widget.GridLayout
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.GestureDetectorCompat
+import kotlin.math.abs
+import kotlin.random.Random
 
 
 class MainActivity : AppCompatActivity() {
 
+    //    private lateinit var boardLayout: GridLayout
+//    private lateinit var board: Board
+//    private lateinit var scoreView: TextView
+//    private lateinit var heightScoreView: TextView
+//    private lateinit var score: Int
+//    private lateinit var heightScore: Int
     private lateinit var boardLayout: GridLayout
-    private lateinit var board: Board
-    private lateinit var score: TextView
-    private lateinit var hightScore: TextView
+    private val textViewBlocks = mutableListOf(mutableListOf<TextView>())
+    private var board = mutableListOf(mutableListOf<Int>())
+    private var size = 4
 
 
     @SuppressLint("ClickableViewAccessibility", "MissingInflatedId")
@@ -25,20 +36,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         boardLayout = findViewById(R.id.boardLayout)
+        newGame()
 
-        // Создаем новую игру
-        board = Board(4)
 
-        // Добавляем два блока со значением 2
-        board.addRandomBlock()
-        board.addRandomBlock()
 
-        // Обновляем отображение игрового поля
-//        boardLayout.updateViewLayout(board)
-
-        // Добавляем обработчик нажатия на клавиши
         val gestureDetector =
             GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
+
                 override fun onDown(e: MotionEvent): Boolean {
                     return true
                 }
@@ -49,59 +53,44 @@ class MainActivity : AppCompatActivity() {
                     velocityX: Float,
                     velocityY: Float
                 ): Boolean {
-                    if (e1 == null || e2 == null) {
-                        return false
-                    }
-
-                    // Вычисляем направление движения по скорости жеста
                     val dx = e2.x - e1.x
                     val dy = e2.y - e1.y
-                    val absDx = Math.abs(dx)
-                    val absDy = Math.abs(dy)
+                    val absDx = abs(dx)
+                    val absDy = abs(dy)
                     val minGestureLength = 50
                     val minVelocity = 200
 
-                    if (absDx > absDy && absDx > minGestureLength && Math.abs(velocityX) > minVelocity) {
+                    if (absDx > absDy && absDx > minGestureLength && abs(velocityX) > minVelocity) {
                         if (dx > 0) {
-                            // Сдвигаем блоки вправо
-
-                            board.moveRight()
+                            moveRight()
                         } else {
-                            // Сдвигаем блоки влево
-                            board.moveLeft()
+                            moveLeft()
                         }
-                    } else if (absDy > absDx && absDy > minGestureLength && Math.abs(velocityY) > minVelocity) {
+                    } else if (absDy > absDx && absDy > minGestureLength && abs(velocityY) > minVelocity) {
                         if (dy > 0) {
-                            // Сдвигаем блоки вниз
-                            board.moveDown()
+                            moveDown()
                         } else {
-                            // Сдвигаем блоки вверх
-                            board.moveUp()
+                            moveUp()
                         }
                     } else {
                         return false
                     }
 
-                    // Добавляем новый блок со значением 2 или 4
-                    board.addRandomBlock()
+                    addRandomBlock()
 
-                    // Обновляем отображение игрового поля
-//                    boardView.updateBoard(board)
+                    updateBoardView()
 
-                    //// Проверяем, закончилась ли игра
-                    if (board.isGameOver()) {
-                        // Показываем диалоговое окно с сообщением о проигрыше
-                        val builder = AlertDialog.Builder(this@MainActivity)
-                        builder.setMessage(getString(R.string.game_over_message))
-                            .setPositiveButton(getString(R.string.new_game)) { _, _ ->
-                                // Начинаем новую игру
-                                board = Board(4)
-                                board.addRandomBlock()
-                                board.addRandomBlock()
-//                                boardLayout.updateBoard(board)
+
+                    if (isGameOver()) {
+                        AlertDialog.Builder(this@MainActivity)
+                            .setTitle(R.string.game_over_title)
+                            .setMessage(R.string.game_over_message)
+                            .setPositiveButton(R.string.new_game) { _, _ ->
+//                                Board(4)
+                                newGame()
+                                updateBoardView()
                             }
-                            .setNegativeButton(getString(R.string.quit)) { _, _ ->
-                                // Закрываем приложение
+                            .setNegativeButton(R.string.quit) { _, _ ->
                                 finish()
                             }
                             .setCancelable(false)
@@ -111,9 +100,228 @@ class MainActivity : AppCompatActivity() {
                     return true
                 }
             })
-
         boardLayout.setOnTouchListener { _, event ->
             gestureDetector.onTouchEvent(event)
         }
+    }
+
+
+    fun addRandomBlock() {
+        val emptyCells = mutableListOf<Pair<Int, Int>>()
+        for (i in 0 until this.size) {
+            for (j in 0 until this.size) {
+                if (board[i][j] == 0) {
+                    emptyCells.add(Pair(i, j))
+                }
+            }
+        }
+        if (emptyCells.isNotEmpty()) {
+            val randomCell = emptyCells.random()
+            board[randomCell.first][randomCell.second] = if (Random.nextDouble() > 0.1) 2 else 4
+        }
+    }
+
+
+    private fun newGame() {
+        board = MutableList(size) { MutableList(size) { 0 } }
+        textViewBlocks.clear()
+        boardLayout.removeAllViews()
+        for (i in 0 until size) {
+            textViewBlocks.add(mutableListOf())
+            for (j in 0 until size) {
+                val textView = TextView(this)
+                textView.text = ""
+                textView.gravity = Gravity.CENTER
+                textView.textSize = 24f
+                val layoutParams = GridLayout.LayoutParams().apply {
+                    columnSpec = GridLayout.spec(j, GridLayout.FILL, 1f)
+                    rowSpec = GridLayout.spec(i, GridLayout.FILL, 1f)
+                    setMargins(8, 8, 8, 8)
+                }
+                boardLayout.addView(textView, layoutParams)
+                textViewBlocks[i].add(textView)
+            }
+        }
+        addRandomBlock()
+        addRandomBlock()
+        updateBoardView()
+    }
+
+
+    @SuppressLint("ResourceAsColor")
+    private fun viewBlocks(numBlock: Int, view: TextView) {
+        if (numBlock == 0) view.text = ""
+        else view.text = numBlock.toString()
+        when (numBlock) {
+            0 -> {
+                view.setBackgroundColor(R.color.middle_grey)
+                view.setTextColor(Color.BLACK)
+            }
+
+            2 -> {
+                view.setBackgroundColor(Color.rgb(240, 240, 240))
+                view.setTextColor(Color.BLACK)
+            }
+
+            4 -> {
+                view.setBackgroundColor(Color.rgb(255, 255, 224))
+                view.setTextColor(Color.BLACK)
+            }
+
+            8 -> {
+                view.setBackgroundColor(Color.rgb(255, 200, 100))
+                view.setTextColor(Color.WHITE)
+            }
+
+            16 -> {
+                view.setBackgroundColor(Color.rgb(255, 140, 30))
+                view.setTextColor(Color.WHITE)
+            }
+
+            32 -> {
+                view.setBackgroundColor(Color.rgb(255, 100, 65))
+                view.setTextColor(Color.WHITE)
+            }
+
+            64 -> {
+                view.setBackgroundColor(Color.rgb(250, 80, 100))
+                view.setTextColor(Color.WHITE)
+            }
+
+            128 -> {
+                view.setBackgroundColor(Color.rgb(255, 220, 0))
+                view.setTextColor(Color.WHITE)
+            }
+
+            256 -> {
+                view.setBackgroundColor(Color.rgb(240, 240, 0))
+                view.setTextColor(Color.BLACK)
+            }
+
+            512 -> {
+                view.setBackgroundColor(Color.rgb(245, 245, 0))
+                view.setTextColor(Color.BLACK)
+            }
+
+            1024 -> {
+                view.setBackgroundColor(Color.rgb(250, 250, 0))
+                view.setTextColor(Color.BLACK)
+            }
+
+            2048 -> {
+                view.setBackgroundColor(Color.rgb(255, 255, 0))
+                view.setTextColor(Color.BLACK)
+            }
+
+            else -> {
+                view.setBackgroundColor(Color.rgb(255, 255, 0))
+                view.setTextColor(Color.BLACK)
+            }
+        }
+    }
+
+
+    fun isGameOver(): Boolean {
+        for (i in 0 until this.size) {
+            for (j in 0 until this.size) {
+                if (board[i][j] == 0) {
+                    return false
+                }
+                if (i < 3 && board[i][j] == board[i + 1][j]) {
+                    return false
+                }
+                if (j < 3 && board[i][j] == board[i][j + 1]) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+
+    private fun updateBoardView() {
+        for (i in 0 until size) {
+            for (j in 0 until size) {
+                textViewBlocks[i][j].text = if (board[i][j] == 0) "" else board[i][j].toString()
+                viewBlocks(board[i][j], textViewBlocks[i][j])
+            }
+        }
+    }
+
+
+    fun moveRight() {
+        for (i in 0 until this.size) {
+            for (j in this.size - 2 downTo 0) {
+                var k = j
+                while (k < this.size - 1 && board[i][k + 1] == 0) {
+                    board[i][k + 1] = board[i][k]
+                    board[i][k] = 0
+                    k++
+                }
+                if (k < this.size - 1 && board[i][k] == board[i][k + 1]) {
+                    board[i][k + 1] *= 2
+                    board[i][k] = 0
+                }
+            }
+        }
+    }
+
+
+    fun moveLeft() {
+        for (i in 0 until this.size) {
+            for (j in 1 until this.size) {
+                var k = j
+                while (k > 0 && board[i][k - 1] == 0) {
+                    board[i][k - 1] = board[i][k]
+                    board[i][k] = 0
+                    k--
+                }
+                if (k > 0 && board[i][k] == board[i][k - 1]) {
+                    board[i][k - 1] *= 2
+                    board[i][k] = 0
+                }
+            }
+        }
+    }
+
+
+    fun moveUp() {
+        for (j in 0 until size) {
+            for (i in 1 until size) {
+                var k = i
+                while (k > 0 && board[k - 1][j] == 0) {
+                    board[k - 1][j] = board[k][j]
+                    board[i][j] = 0
+                    k--
+                }
+                if (k > 0 && board[k][j] == board[k - 1][j]) {
+                    board[k - 1][j] *= 2
+                    board[k][j] = 0
+                }
+            }
+        }
+    }
+
+
+    fun moveDown() {
+        for (j in 0 until this.size) {
+            for (i in this.size - 2 downTo 0) {
+                var k = i
+                while (k < size - 1 && board[k + 1][j] == 0) {
+                    board[k + 1][j] = board[k][j]
+                    board[i][j] = 0
+                    k++
+                }
+                if (k < size - 1 && board[k][j] == board[k + 1][j]) {
+                    board[k + 1][j] *= 2
+                    board[k][j] = 0
+                }
+            }
+        }
+    }
+
+
+    fun btnClick(v: View) {
+        newGame()
     }
 }

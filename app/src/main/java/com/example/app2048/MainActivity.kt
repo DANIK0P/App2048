@@ -18,12 +18,11 @@ import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
-    //    private lateinit var boardLayout: GridLayout
-//    private lateinit var board: Board
-//    private lateinit var scoreView: TextView
-//    private lateinit var heightScoreView: TextView
-//    private lateinit var score: Int
-//    private lateinit var heightScore: Int
+
+    private lateinit var scoreView: TextView
+    private lateinit var heightScoreView: TextView
+    private var score = 0
+    private var heightScore = 0
     private lateinit var boardLayout: GridLayout
     private val textViewBlocks = mutableListOf(mutableListOf<TextView>())
     private var board = mutableListOf(mutableListOf<Int>())
@@ -36,8 +35,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         boardLayout = findViewById(R.id.boardLayout)
+        scoreView = findViewById(R.id.scoreTextView)
+        heightScoreView = findViewById(R.id.highScoreTextView)
         newGame()
-
 
 
         val gestureDetector =
@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     addRandomBlock()
-
+                    if (heightScore < score) heightScore = score
                     updateBoardView()
 
 
@@ -126,6 +126,7 @@ class MainActivity : AppCompatActivity() {
         board = MutableList(size) { MutableList(size) { 0 } }
         textViewBlocks.clear()
         boardLayout.removeAllViews()
+        score = 0
         for (i in 0 until size) {
             textViewBlocks.add(mutableListOf())
             for (j in 0 until size) {
@@ -246,6 +247,8 @@ class MainActivity : AppCompatActivity() {
                 viewBlocks(board[i][j], textViewBlocks[i][j])
             }
         }
+        scoreView.text = score.toString()
+        heightScoreView.text = heightScore.toString()
     }
 
 
@@ -259,6 +262,7 @@ class MainActivity : AppCompatActivity() {
                     k++
                 }
                 if (k < this.size - 1 && board[i][k] == board[i][k + 1]) {
+                    score += board[i][k]
                     board[i][k + 1] *= 2
                     board[i][k] = 0
                 }
@@ -277,6 +281,7 @@ class MainActivity : AppCompatActivity() {
                     k--
                 }
                 if (k > 0 && board[i][k] == board[i][k - 1]) {
+                    score += board[i][k]
                     board[i][k - 1] *= 2
                     board[i][k] = 0
                 }
@@ -291,10 +296,11 @@ class MainActivity : AppCompatActivity() {
                 var k = i
                 while (k > 0 && board[k - 1][j] == 0) {
                     board[k - 1][j] = board[k][j]
-                    board[i][j] = 0
+                    board[k][j] = 0
                     k--
                 }
                 if (k > 0 && board[k][j] == board[k - 1][j]) {
+                    score += board[k][j]
                     board[k - 1][j] *= 2
                     board[k][j] = 0
                 }
@@ -309,10 +315,11 @@ class MainActivity : AppCompatActivity() {
                 var k = i
                 while (k < size - 1 && board[k + 1][j] == 0) {
                     board[k + 1][j] = board[k][j]
-                    board[i][j] = 0
+                    board[k][j] = 0
                     k++
                 }
                 if (k < size - 1 && board[k][j] == board[k + 1][j]) {
+                    score += board[k][j]
                     board[k + 1][j] *= 2
                     board[k][j] = 0
                 }

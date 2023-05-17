@@ -27,6 +27,10 @@ class MainActivity : AppCompatActivity() {
     private val textViewBlocks = mutableListOf(mutableListOf<TextView>())
     private var board = mutableListOf(mutableListOf<Int>())
     private var size = 4
+    private lateinit var blockAnimation: AnimationBlocks
+    private val startXY = mutableListOf<Pair<Int, Int>>()
+    private val endXY = mutableListOf<Pair<Int, Int>>()
+
 
 
     @SuppressLint("ClickableViewAccessibility", "MissingInflatedId")
@@ -34,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        blockAnimation = AnimationBlocks()
         boardLayout = findViewById(R.id.boardLayout)
         scoreView = findViewById(R.id.scoreTextView)
         heightScoreView = findViewById(R.id.highScoreTextView)
@@ -78,6 +83,11 @@ class MainActivity : AppCompatActivity() {
 
                     addRandomBlock()
                     if (heightScore < score) heightScore = score
+                    if (startXY.isNotEmpty() && endXY.isEmpty()) {
+                        animateBlock()
+                        startXY.clear()
+                        endXY.clear()
+                    }
                     updateBoardView()
 
 
@@ -86,7 +96,6 @@ class MainActivity : AppCompatActivity() {
                             .setTitle(R.string.game_over_title)
                             .setMessage(R.string.game_over_message)
                             .setPositiveButton(R.string.new_game) { _, _ ->
-//                                Board(4)
                                 newGame()
                                 updateBoardView()
                             }
@@ -122,6 +131,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    @SuppressLint("ResourceAsColor")
     private fun newGame() {
         board = MutableList(size) { MutableList(size) { 0 } }
         textViewBlocks.clear()
@@ -134,6 +144,7 @@ class MainActivity : AppCompatActivity() {
                 textView.text = ""
                 textView.gravity = Gravity.CENTER
                 textView.textSize = 24f
+                textView.setBackgroundColor(R.color.middle_bg)
                 val layoutParams = GridLayout.LayoutParams().apply {
                     columnSpec = GridLayout.spec(j, GridLayout.FILL, 1f)
                     rowSpec = GridLayout.spec(i, GridLayout.FILL, 1f)
@@ -149,13 +160,171 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    fun isGameOver(): Boolean {
+        for (i in 0 until this.size) {
+            for (j in 0 until this.size) {
+                if (board[i][j] == 0) {
+                    return false
+                }
+                if (i < 3 && board[i][j] == board[i + 1][j]) {
+                    return false
+                }
+                if (j < 3 && board[i][j] == board[i][j + 1]) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+
+    private fun updateBoardView() {
+        for (i in 0 until size) {
+            for (j in 0 until size) {
+                textViewBlocks[i][j].text = if (board[i][j] == 0) "" else board[i][j].toString()
+                viewBlocks(board[i][j], textViewBlocks[i][j])
+            }
+        }
+        scoreView.text = score.toString()
+        heightScoreView.text = heightScore.toString()
+    }
+
+
+    fun moveRight() {
+        for (i in 0 until this.size) {
+            for (j in this.size - 2 downTo 0) {
+                var k = j
+                var isNotNothing = false
+                if (board[i][j] != 0) {
+                    startXY.add(Pair(j, i))
+                    isNotNothing = true
+                }
+                while (k < this.size - 1 && board[i][k + 1] == 0) {
+                    board[i][k + 1] = board[i][k]
+                    board[i][k] = 0
+                    k++
+                }
+                if (k < this.size - 1 && board[i][k] == board[i][k + 1]) {
+                    score += board[i][k]
+                    board[i][k + 1] *= 2
+                    board[i][k] = 0
+                }
+                if (board[i][j] == 0 && isNotNothing) {
+                    endXY.add(Pair(k + 1, i))
+                } else {
+                    endXY.add(Pair(j, i))
+                }
+            }
+        }
+    }
+
+
+    fun moveLeft() {
+        for (i in 0 until this.size) {
+            for (j in 1 until this.size) {
+                var k = j
+                var isNotNothing = false
+                if (board[i][j] != 0) {
+                    startXY.add(Pair(j, i))
+                    isNotNothing = true
+                }
+                while (k > 0 && board[i][k - 1] == 0) {
+                    board[i][k - 1] = board[i][k]
+                    board[i][k] = 0
+                    k--
+                }
+                if (k > 0 && board[i][k] == board[i][k - 1]) {
+                    score += board[i][k]
+                    board[i][k - 1] *= 2
+                    board[i][k] = 0
+                }
+                if (board[i][j] == 0 && isNotNothing) {
+                    endXY.add(Pair(k - 1, i))
+                } else {
+                    endXY.add(Pair(j, i))
+                }
+            }
+        }
+    }
+
+
+    fun moveUp() {
+        for (j in 0 until size) {
+            for (i in 1 until size) {
+                var k = i
+                var isNotNothing = false
+                if (board[i][j] != 0) {
+                    startXY.add(Pair(j, i))
+                    isNotNothing = true
+                }
+                while (k > 0 && board[k - 1][j] == 0) {
+                    board[k - 1][j] = board[k][j]
+                    board[k][j] = 0
+                    k--
+                }
+                if (k > 0 && board[k][j] == board[k - 1][j]) {
+                    score += board[k][j]
+                    board[k - 1][j] *= 2
+                    board[k][j] = 0
+                }
+                if (board[i][j] == 0 && isNotNothing) {
+                    endXY.add(Pair(j, k - 1))
+                } else {
+                    endXY.add(Pair(j, i))
+                }
+            }
+        }
+    }
+
+
+    fun moveDown() {
+        for (j in 0 until this.size) {
+            for (i in this.size - 2 downTo 0) {
+                var k = i
+                var isNotNothing = false
+                if (board[i][j] != 0) {
+                    startXY.add(Pair(j, i))
+                    isNotNothing = true
+                }
+                while (k < size - 1 && board[k + 1][j] == 0) {
+                    board[k + 1][j] = board[k][j]
+                    board[k][j] = 0
+                    k++
+                }
+                if (k < size - 1 && board[k][j] == board[k + 1][j]) {
+                    score += board[k][j]
+                    board[k + 1][j] *= 2
+                    board[k][j] = 0
+                }
+                if (board[i][j] == 0 && isNotNothing) {
+                    endXY.add(Pair(j, k + 1))
+                } else {
+                    endXY.add(Pair(j, i))
+                }
+            }
+        }
+    }
+
+    private fun animateBlock() {
+        for (i in 0 until startXY.size) {
+            blockAnimation.animateBlock(
+                textViewBlocks[startXY[i].first][startXY[i].second],
+                startXY[i].first,
+                startXY[i].second,
+                endXY[i].first,
+                endXY[i].second
+            )
+        }
+    }
+
+
     @SuppressLint("ResourceAsColor")
     private fun viewBlocks(numBlock: Int, view: TextView) {
         if (numBlock == 0) view.text = ""
         else view.text = numBlock.toString()
         when (numBlock) {
             0 -> {
-                view.setBackgroundColor(R.color.middle_grey)
+                view.setBackgroundColor(R.color.middle_bg)
                 view.setTextColor(Color.BLACK)
             }
 
@@ -215,114 +384,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             else -> {
-                view.setBackgroundColor(Color.rgb(255, 255, 0))
-                view.setTextColor(Color.BLACK)
-            }
-        }
-    }
-
-
-    fun isGameOver(): Boolean {
-        for (i in 0 until this.size) {
-            for (j in 0 until this.size) {
-                if (board[i][j] == 0) {
-                    return false
-                }
-                if (i < 3 && board[i][j] == board[i + 1][j]) {
-                    return false
-                }
-                if (j < 3 && board[i][j] == board[i][j + 1]) {
-                    return false
-                }
-            }
-        }
-        return true
-    }
-
-
-    private fun updateBoardView() {
-        for (i in 0 until size) {
-            for (j in 0 until size) {
-                textViewBlocks[i][j].text = if (board[i][j] == 0) "" else board[i][j].toString()
-                viewBlocks(board[i][j], textViewBlocks[i][j])
-            }
-        }
-        scoreView.text = score.toString()
-        heightScoreView.text = heightScore.toString()
-    }
-
-
-    fun moveRight() {
-        for (i in 0 until this.size) {
-            for (j in this.size - 2 downTo 0) {
-                var k = j
-                while (k < this.size - 1 && board[i][k + 1] == 0) {
-                    board[i][k + 1] = board[i][k]
-                    board[i][k] = 0
-                    k++
-                }
-                if (k < this.size - 1 && board[i][k] == board[i][k + 1]) {
-                    score += board[i][k]
-                    board[i][k + 1] *= 2
-                    board[i][k] = 0
-                }
-            }
-        }
-    }
-
-
-    fun moveLeft() {
-        for (i in 0 until this.size) {
-            for (j in 1 until this.size) {
-                var k = j
-                while (k > 0 && board[i][k - 1] == 0) {
-                    board[i][k - 1] = board[i][k]
-                    board[i][k] = 0
-                    k--
-                }
-                if (k > 0 && board[i][k] == board[i][k - 1]) {
-                    score += board[i][k]
-                    board[i][k - 1] *= 2
-                    board[i][k] = 0
-                }
-            }
-        }
-    }
-
-
-    fun moveUp() {
-        for (j in 0 until size) {
-            for (i in 1 until size) {
-                var k = i
-                while (k > 0 && board[k - 1][j] == 0) {
-                    board[k - 1][j] = board[k][j]
-                    board[k][j] = 0
-                    k--
-                }
-                if (k > 0 && board[k][j] == board[k - 1][j]) {
-                    score += board[k][j]
-                    board[k - 1][j] *= 2
-                    board[k][j] = 0
-                }
-            }
-        }
-    }
-
-
-    fun moveDown() {
-        for (j in 0 until this.size) {
-            for (i in this.size - 2 downTo 0) {
-                var k = i
-                while (k < size - 1 && board[k + 1][j] == 0) {
-                    board[k + 1][j] = board[k][j]
-                    board[k][j] = 0
-                    k++
-                }
-                if (k < size - 1 && board[k][j] == board[k + 1][j]) {
-                    score += board[k][j]
-                    board[k + 1][j] *= 2
-                    board[k][j] = 0
-                }
+                view.setBackgroundColor(Color.BLACK)
+                view.setTextColor(Color.WHITE)
             }
         }
     }

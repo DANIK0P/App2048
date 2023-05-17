@@ -5,8 +5,9 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="dark_grey">#FF8A8A8A</color>
-    <color name="light_grey">#FFCCCCCC</color>
-    <color name="middle_grey">#BABABA</color>
+    <color name="dark_bg">#84e55e</color>
+    <color name="light_bg">#b6f3c0</color>
+    <color name="middle_bg">#ebeb81</color>
     <color name="black_overlay">#66000000</color>
+    <color name="text_2048">#FF46Bf1f</color>
 </resources>

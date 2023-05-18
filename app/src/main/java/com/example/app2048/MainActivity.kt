@@ -32,7 +32,6 @@ class MainActivity : AppCompatActivity() {
     private val endXY = mutableListOf<Pair<Int, Int>>()
 
 
-
     @SuppressLint("ClickableViewAccessibility", "MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,11 +82,13 @@ class MainActivity : AppCompatActivity() {
 
                     addRandomBlock()
                     if (heightScore < score) heightScore = score
-                    if (startXY.isNotEmpty() && endXY.isEmpty()) {
-                        animateBlock()
-                        startXY.clear()
-                        endXY.clear()
-                    }
+
+//                    if (startXY.isNotEmpty() && endXY.isNotEmpty()) {
+//                        animateBlock()
+//                        startXY.clear()
+//                        endXY.clear()
+//                    }
+
                     updateBoardView()
 
 
@@ -144,7 +145,6 @@ class MainActivity : AppCompatActivity() {
                 textView.text = ""
                 textView.gravity = Gravity.CENTER
                 textView.textSize = 24f
-                textView.setBackgroundColor(R.color.middle_bg)
                 val layoutParams = GridLayout.LayoutParams().apply {
                     columnSpec = GridLayout.spec(j, GridLayout.FILL, 1f)
                     rowSpec = GridLayout.spec(i, GridLayout.FILL, 1f)
@@ -187,6 +187,19 @@ class MainActivity : AppCompatActivity() {
         }
         scoreView.text = score.toString()
         heightScoreView.text = heightScore.toString()
+    }
+
+
+    private fun animateBlock() {
+        for (i in 0 until startXY.size) {
+            blockAnimation.animateBlock(
+                textViewBlocks[startXY[i].second][startXY[i].first],
+                startXY[i].first,
+                startXY[i].second,
+                endXY[i].first,
+                endXY[i].second
+            )
+        }
     }
 
 
@@ -302,18 +315,6 @@ class MainActivity : AppCompatActivity() {
                     endXY.add(Pair(j, i))
                 }
             }
-        }
-    }
-
-    private fun animateBlock() {
-        for (i in 0 until startXY.size) {
-            blockAnimation.animateBlock(
-                textViewBlocks[startXY[i].first][startXY[i].second],
-                startXY[i].first,
-                startXY[i].second,
-                endXY[i].first,
-                endXY[i].second
-            )
         }
     }
 

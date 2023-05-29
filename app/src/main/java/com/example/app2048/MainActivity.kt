@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var heightScoreView: TextView
     private lateinit var boardLayout: GridLayout
     private lateinit var board: Board
+    private lateinit var viewBoard: ViewBoard
 
 
     @SuppressLint("ClickableViewAccessibility", "MissingInflatedId")
@@ -31,9 +32,9 @@ class MainActivity : AppCompatActivity() {
         heightScoreView = findViewById(R.id.highScoreTextView)
         boardLayout = findViewById(R.id.boardLayout)
 
-        board = Board(boardLayout, scoreView, heightScoreView)
-        board.newGame()
-
+        viewBoard = ViewBoard(boardLayout, scoreView, heightScoreView)
+        board = viewBoard.board
+        viewBoard.newGame()
 
         val gestureDetector =
             GestureDetectorCompat(this, object : GestureDetector.SimpleOnGestureListener() {
@@ -55,6 +56,7 @@ class MainActivity : AppCompatActivity() {
                     val minGestureLength = 50
                     val minVelocity = 200
 
+
                     board.startXY()
                     if (absDx > absDy && absDx > minGestureLength && abs(velocityX) > minVelocity) {
                         if (dx > 0) {
@@ -75,7 +77,7 @@ class MainActivity : AppCompatActivity() {
 
                     if (board.notAddBlock()) {
                         board.addRandomBlock()
-                        board.updateBoardView()
+                        viewBoard.updateBoardView()
                     }
                     board.clearStEnXY()
 
@@ -84,7 +86,7 @@ class MainActivity : AppCompatActivity() {
                         AlertDialog.Builder(this@MainActivity)
                             .setTitle(R.string.game_over_title)
                             .setPositiveButton(R.string.new_game) { _, _ ->
-                                board.newGame()
+                                viewBoard.newGame()
                             }
                             .setNegativeButton(R.string.quit) { _, _ ->
                                 finish()
@@ -103,6 +105,6 @@ class MainActivity : AppCompatActivity() {
 
 
     fun btnClick(v: View) {
-        board.newGame()
+        viewBoard.newGame()
     }
 }

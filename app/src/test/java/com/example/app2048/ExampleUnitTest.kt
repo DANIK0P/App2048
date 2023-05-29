@@ -11,96 +11,144 @@ import org.junit.Assert.*
  */
 class ExampleUnitTest {
 
-    private var size = 4
-    private lateinit var board: MutableList<MutableList<Int>>
-    private val stXY = mutableListOf<Pair<Int, Int>>()
-    private val eXY = mutableListOf<Pair<Int, Int>>()
+    @Test
+    fun testAddRandomBlock() {
+        val board = Board()
+        board.board = mutableListOf(
+            mutableListOf(2, 4, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0)
+        )
+        board.addRandomBlock()
+        assertTrue(board.board.any { it.any { cell -> cell != 0 } })
+    }
 
     @Test
-    fun notAdd() {
-
-        board = mutableListOf(
-            mutableListOf(2, 0, 0, 0),
-            mutableListOf(4, 2, 0, 0),
-            mutableListOf(4, 2, 0, 0),
-            mutableListOf(16, 4, 2, 0)
+    fun testIsGameOver() {
+        val board = Board()
+        board.board = mutableListOf(
+            mutableListOf(2, 4, 8, 16),
+            mutableListOf(32, 64, 128, 256),
+            mutableListOf(512, 1024, 2048, 4096),
+            mutableListOf(16, 2, 4, 8)
         )
-        move(20)
-        assertFalse(notAddBlock())
+        assertTrue(board.isGameOver())
+
+        board.board = mutableListOf(
+            mutableListOf(2, 4, 8, 16),
+            mutableListOf(32, 64, 128, 256),
+            mutableListOf(512, 1024, 2048, 0),
+            mutableListOf(0, 0, 0, 0)
+        )
+        assertFalse(board.isGameOver())
     }
 
-    private fun move(j: Int) {
-        var k = j
-        while (k > 0) {
-            startXY(board)
-//        moveRight()
-            moveLeft()
-            endXY(board)
-            notAddBlock()
-            println(notAddBlock())
-            println(stXY)
-            println(eXY)
-            stXY.clear()
-            eXY.clear()
-            k--
-        }
+    @Test
+    fun testMoveRight() {
+        val board = Board()
+        board.board = mutableListOf(
+            mutableListOf(0, 0, 2, 2),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0)
+        )
+        board.moveRight()
+        assertEquals(
+            mutableListOf(
+                mutableListOf(0, 0, 0, 4),
+                mutableListOf(0, 0, 0, 0),
+                mutableListOf(0, 0, 0, 0),
+                mutableListOf(0, 0, 0, 0)
+            ), board.board
+        )
     }
 
-    private fun notAddBlock(): Boolean {
-        if (stXY != eXY) return true
-        return false
+    @Test
+    fun testMoveLeft() {
+        val board = Board()
+        board.board = mutableListOf(
+            mutableListOf(2, 2, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0)
+        )
+        board.moveLeft()
+        assertEquals(
+            mutableListOf(
+                mutableListOf(4, 0, 0, 0),
+                mutableListOf(0, 0, 0, 0),
+                mutableListOf(0, 0, 0, 0),
+                mutableListOf(0, 0, 0, 0)
+            ), board.board
+        )
     }
 
-
-    private fun startXY(board: MutableList<MutableList<Int>>) {
-        for (i in 0 until size) {
-            for (j in 0 until size) {
-                if (board[i][j] != 0) stXY.add(Pair(j, i))
-            }
-        }
+    @Test
+    fun testMoveUp() {
+        val board = Board()
+        board.board = mutableListOf(
+            mutableListOf(2, 0, 0, 0),
+            mutableListOf(2, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0)
+        )
+        board.moveUp()
+        assertEquals(
+            mutableListOf(
+                mutableListOf(4, 0, 0, 0),
+                mutableListOf(0, 0, 0, 0),
+                mutableListOf(0, 0, 0, 0),
+                mutableListOf(0, 0, 0, 0)
+            ), board.board
+        )
     }
 
-    private fun endXY(board: MutableList<MutableList<Int>>) {
-        for (i in 0 until size) {
-            for (j in 0 until size) {
-                if (board[i][j] != 0) eXY.add(Pair(j, i))
-            }
-        }
+    @Test
+    fun testMoveDown() {
+        val board = Board()
+        board.board = mutableListOf(
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(2, 0, 0, 0),
+            mutableListOf(2, 0, 0, 0)
+        )
+        board.moveDown()
+        assertEquals(
+            mutableListOf(
+                mutableListOf(0, 0, 0, 0),
+                mutableListOf(0, 0, 0, 0),
+                mutableListOf(0, 0, 0, 0),
+                mutableListOf(4, 0, 0, 0)
+            ), board.board
+        )
     }
 
+    @Test
+    fun testNotAddBlock() {
+        val board = Board()
+        board.board = mutableListOf(
+            mutableListOf(2, 4, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0)
+        )
+        board.startXY()
+        board.moveLeft()
+        board.endXY()
+        assertFalse(board.notAddBlock())
+        board.clearStEnXY()
 
-    private fun moveRight() {
-        for (i in 0 until this.size) {
-            for (j in this.size - 2 downTo 0) {
-                var k = j
-                while (k < this.size - 1 && board[i][k + 1] == 0) {
-                    board[i][k + 1] = board[i][k]
-                    board[i][k] = 0
-                    k++
-                }
-                if (k < this.size - 1 && board[i][k] == board[i][k + 1]) {
-                    board[i][k + 1] *= 2
-                    board[i][k] = 0
-                }
-            }
-        }
-    }
-
-    private fun moveLeft() {
-        for (i in 0 until this.size) {
-            for (j in 1 until this.size) {
-                var k = j
-                while (k > 0 && board[i][k - 1] == 0) {
-                    board[i][k - 1] = board[i][k]
-                    board[i][k] = 0
-                    k--
-                }
-                if (k > 0 && board[i][k] == board[i][k - 1]) {
-                    board[i][k]
-                    board[i][k - 1] *= 2
-                    board[i][k] = 0
-                }
-            }
-        }
+        board.board = mutableListOf(
+            mutableListOf(2, 2, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 0, 0, 0),
+            mutableListOf(0, 4, 0, 4)
+        )
+        board.startXY()
+        board.moveRight()
+        board.endXY()
+        assertTrue(board.notAddBlock())
+        board.clearStEnXY()
     }
 }

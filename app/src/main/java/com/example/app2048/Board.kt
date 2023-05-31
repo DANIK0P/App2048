@@ -6,11 +6,26 @@ class Board {
 
 
     private var size = 4
-    var board = MutableList(size) { MutableList(size) { 0 } }
-    var score = 0
+    private var board = MutableList(size) { MutableList(size) { 0 } }
+    private var score = 0
     private val stXY = mutableListOf<Pair<Int, Int>>()
     private val eXY = mutableListOf<Pair<Int, Int>>()
 
+    fun getBoard(): MutableList<MutableList<Int>> {
+        return board
+    }
+
+    fun getScore(): Int {
+        return score
+    }
+
+    fun setBoard(board: MutableList<MutableList<Int>>) {
+        this.board = board
+    }
+
+    fun setScore(score:Int) {
+        this.score = score
+    }
 
     fun addRandomBlock() {
         val emptyCells = mutableListOf<Pair<Int, Int>>()

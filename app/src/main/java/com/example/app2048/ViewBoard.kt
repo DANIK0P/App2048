@@ -22,10 +22,10 @@ class ViewBoard(
 
     @SuppressLint("ResourceAsColor")
     fun newGame() {
-        board.board = MutableList(size) { MutableList(size) { 0 } }
+        board.setBoard(MutableList(size) { MutableList(size) { 0 } })
         textViewBlocks.clear()
         boardLayout.removeAllViews()
-        board.score = 0
+        board.setScore(0)
         for (i in 0 until size) {
             textViewBlocks.add(mutableListOf())
             for (j in 0 until size) {
@@ -49,15 +49,15 @@ class ViewBoard(
 
 
     fun updateBoardView() {
-        if (heightScore < board.score) heightScore = board.score
+        if (heightScore < board.getScore()) heightScore = board.getScore()
         for (i in 0 until size) {
             for (j in 0 until size) {
                 textViewBlocks[i][j].text =
-                    if (board.board[i][j] == 0) "" else board.board[i][j].toString()
-                viewBlocks(board.board[i][j], textViewBlocks[i][j])
+                    if (board.getBoard()[i][j] == 0) "" else board.getBoard()[i][j].toString()
+                viewBlocks(board.getBoard()[i][j], textViewBlocks[i][j])
             }
         }
-        scoreView.text = board.score.toString()
+        scoreView.text = board.getScore().toString()
         heightScoreView.text = heightScore.toString()
     }
 
